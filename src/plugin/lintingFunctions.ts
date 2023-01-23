@@ -352,6 +352,68 @@ export function checkType(node, errors) {
   }
 }
 
+export function checkDescription(node, errors) {
+  if (node.description.length === 0) {
+    return errors.push(
+      createErrorObject(
+        node,
+        "description",
+        "Missing description",
+        "Probably we need one"
+      )
+    );
+  }
+}
+
+export function checkIfIconBad(node, errors) {
+  if (
+    node.children &&
+    node.children.length === 1 &&
+    node.children[0].name === "ic"
+  ) {
+    return errors.push(
+      createErrorObject(
+        node,
+        "description",
+        "Icon is not a component",
+        "This icon is a frame and not a component"
+      )
+    );
+  }
+}
+
+export async function checkIfIconParentLocal(node) {
+  let errors = [];
+  if (node.type === "INSTANCE") {
+    const key = node.mainComponent.key;
+    let response = false;
+    try {
+      await figma
+        .importComponentByKeyAsync(key)
+        .then(res => {
+          if (res) response = true;
+        })
+        .catch(err => console.log("err :>> ", err))
+        .finally(() => {
+          if (node.mainComponent.remote === false) response = true;
+          if (response === false) {
+            errors.push(
+              createErrorObject(
+                node,
+                "description",
+                "Icon is not from current library",
+                "Replace icon with local one (or one from team library)"
+              )
+            );
+          }
+        });
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  }
+  return errors;
+}
+
 // Utility functions for color conversion.
 const convertColor = color => {
   const colorObj = color;

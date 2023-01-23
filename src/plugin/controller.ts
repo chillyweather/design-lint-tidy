@@ -3,9 +3,11 @@ import {
   checkEffects,
   checkFills,
   checkStrokes,
-  checkType
-  // customCheckTextFills,
-  // uncomment this as an example of a custom lint function ^
+  checkType,
+  checkDescription,
+  customCheckTextFills,
+  checkIfIconBad,
+  checkIfIconParentLocal
 } from "./lintingFunctions";
 
 figma.showUI(__html__, { width: 360, height: 580 });
@@ -316,7 +318,9 @@ figma.ui.onmessage = msg => {
       case "SECTION": {
         return lintSectionRules(node);
       }
-      case "INSTANCE":
+      case "INSTANCE": {
+        return lintInstanceRules(node);
+      }
       case "RECTANGLE": {
         return lintRectangleRules(node);
       }
@@ -342,6 +346,12 @@ figma.ui.onmessage = msg => {
     }
   }
 
+  async function lintInstanceRules(node) {
+    const errors = await checkIfIconParentLocal(node);
+    console.log("errors in controller :>> ", errors);
+    return errors;
+  }
+
   function lintComponentRules(node) {
     let errors = [];
 
@@ -356,6 +366,7 @@ figma.ui.onmessage = msg => {
     checkRadius(node, errors, borderRadiusArray);
     checkEffects(node, errors);
     checkStrokes(node, errors);
+    checkDescription(node, errors);
 
     return errors;
   }
@@ -384,7 +395,9 @@ figma.ui.onmessage = msg => {
     checkStrokes(node, errors);
     checkRadius(node, errors, borderRadiusArray);
     checkEffects(node, errors);
+    checkIfIconBad(node, errors);
 
+    console.log("errors in frame :>> ", errors);
     return errors;
   }
 
@@ -407,7 +420,7 @@ figma.ui.onmessage = msg => {
 
     // We could also comment out checkFills and use a custom function instead
     // Take a look at line 122 in lintingFunction.ts for an example.
-    // customCheckTextFills(node, errors);
+    customCheckTextFills(node, errors);
     checkEffects(node, errors);
     checkStrokes(node, errors);
 
